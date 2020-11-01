@@ -19,11 +19,6 @@ async def on_ready():
     print('Elon is ready')
 
 
-@elon.command()
-async def nick(ctx):
-    await ctx.send(f'{ctx.author}')
-
-
 for extension in extensions:
     try:
         elon.load_extension('cogs.' + extension)
