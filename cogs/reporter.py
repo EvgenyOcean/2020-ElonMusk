@@ -1,5 +1,8 @@
 import discord
 import logging
+import datetime
+import pytz
+import asyncio
 from discord.ext import commands, tasks
 from db import operations
 from utils import get_msk_time, ChannelsMixin
@@ -15,10 +18,10 @@ logger.addHandler(handler)
 class Reporter(commands.Cog, ChannelsMixin):
     def __init__(self, elon):
         self.elon = elon
-        self.minute_report.start() # add starter function once in production
+        self.elon.loop.create_task(self.schedule_daily_report())
 
-    @tasks.loop(minutes=5) # change to the daily_report once in production
-    async def minute_report(self):
+    @tasks.loop(hours=24)
+    async def daily_report(self):
         '''
         Fetches all the users who worked today
         '''
@@ -52,6 +55,15 @@ class Reporter(commands.Cog, ChannelsMixin):
                 minutes = (total_seconds // 60) % 60
                 message += f':man_technologist: {user} → ** |{hours:02d} : {minutes:02d}| ** \n'
 
+            message = f'''
+                ```plaintext
+                This is daily report time!
+                ```
+                {message}
+                ```plaintext
+                Good job! See ya all tomorrow!
+                ```
+            '''
             await hall.send(message)
 
     @commands.command()
@@ -90,6 +102,36 @@ class Reporter(commands.Cog, ChannelsMixin):
             await ctx.send('You need to specify username')
         else:
             logging.exception('Something wrong with file command:', error)
+
+    async def schedule_daily_report(self):
+        '''
+        To properly start loop with daily reports 
+        Only at 23:59PM
+        '''
+        await self.elon.wait_until_ready()
+        # I need to start running daily_report everyday at 23:59PM
+        # But first time it should aslo run at 23:59PM
+        # This method only runs once! But we can reconfigure to check if 
+        # something went wrong and if we need to rerun minute_report
+        dt_msk = get_msk_time()
+
+        dt_run_time = datetime.datetime(2020, 11, 1, 20, 59, 00, tzinfo=pytz.UTC)
+        dt_run_time = dt_run_time.astimezone(pytz.timezone('Europe/Moscow'))
+
+        # getting the amount of seconds between them
+        td = dt_run_time - dt_msk
+        ts = td.total_seconds()
+        print(f'Waiting for {ts} seconds') # Waiting for 4.317719 seconds
+
+        if ts < 0:
+            # need to reschedule or whatever
+            print('We can\'t run the task in the past!')
+            return
+        
+        # wait some amount of seconds until it's 23:59PM
+        await asyncio.sleep(ts)
+        # once it's 23:59PM start loop task
+        self.daily_report.start()
 
 
 def setup(elon):
