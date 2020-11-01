@@ -1,24 +1,35 @@
 import discord
 import os
 from discord.ext import commands
+from db.initializer import get_pool
 
+
+extensions = (
+    'focuser',
+)
 
 # cmon, let's get real here
 intents = discord.Intents.all()
-mia = commands.Bot(command_prefix="$mia ", intents=intents)
+elon = commands.Bot(command_prefix="elon.", intents=intents)
 
 
-@mia.event
+@elon.event
 async def on_ready():
-    print('Mia is ready')
+    print('Elon is ready')
 
 
-@mia.command(name="who")
-async def daddy(ctx, *, command=None):
-    if command == 'is your daddy':
-        await ctx.send('You know that ^^')
+for extension in extensions:
+    try:
+        elon.load_extension('cogs.' + extension)
+    except Exception as err:
+        print(err)
     else:
-        await ctx.send('Figure it out!')
+        print(extension + ' has been loaded (success)')
 
 
-mia.run(os.environ.get('MIA_TOKEN'))
+
+
+# creating a connection pool
+elon.loop.run_until_complete(get_pool(elon))
+
+elon.run(os.environ.get('MIA_TOKEN'))
