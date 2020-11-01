@@ -1,11 +1,10 @@
-import os
 import discord 
 import asyncio
 import logging
 from functools import cached_property
-from discord.ext import commands, tasks
+from discord.ext import commands
 from db import operations
-from utils import get_msk_time
+from utils import get_msk_time, ChannelsMixin
 
 
 ### setting up a logger ###
@@ -18,20 +17,10 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 
-class Focuser(commands.Cog):
+class Focuser(commands.Cog, ChannelsMixin):
     def __init__(self, elon):
         self.elon = elon
         self.in_focus = {}
-
-    @cached_property
-    def focus_channel(self):
-        '''Getting focus channel'''
-        return self.elon.get_channel(int(os.environ.get('FOCUS_ID')))
-
-    @cached_property
-    def hall_channel(self):
-        '''Getting hall of fame channel'''
-        return self.elon.get_channel(int(os.environ.get('HALL_ID')))
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member:discord.Member, before, after):
@@ -76,6 +65,8 @@ class Focuser(commands.Cog):
             'minute(s)': (td.seconds//60)%60
         }
 
+        await self.save_working_duration(member, started_working, ts)
+
         final_str = ''
         for time_prop in time_obj:
             value = time_obj[time_prop]
@@ -84,6 +75,23 @@ class Focuser(commands.Cog):
 
         final_str = final_str.strip()
         await self.hall_channel.send(f'Hey, **{member.display_name}** you was productive for __{final_str}__! Hope to see ya soon again!')
+
+    async def save_working_duration(self, member, started_working, ts):
+        '''
+        Saves number of seconds a member has worked into the db.
+        '''
+        user_id = member.id
+        cmd1 = '''
+            INSERT INTO users VALUES($1, $2) 
+            ON CONFLICT(id) DO UPDATE SET username = EXCLUDED.username;
+        '''
+        cmd1_args = (member.id, str(member)) #or nick
+        cmd2 = '''
+            INSERT INTO working_session(duration, owner, date_added)
+            VALUES($1, $2, $3)
+        '''
+        cmd2_args = (ts, member.id, started_working)
+        await operations.executemany(self.elon.pool, ((cmd1, cmd1_args), (cmd2, cmd2_args)))
 
 
 def setup(elon):

@@ -6,6 +6,7 @@ from db.initializer import get_pool
 
 extensions = (
     'focuser',
+    'reporter',
 )
 
 # cmon, let's get real here
@@ -16,6 +17,11 @@ elon = commands.Bot(command_prefix="elon.", intents=intents)
 @elon.event
 async def on_ready():
     print('Elon is ready')
+
+
+@elon.command()
+async def nick(ctx):
+    await ctx.send(f'{ctx.author}')
 
 
 for extension in extensions:

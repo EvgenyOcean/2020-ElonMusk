@@ -1,4 +1,5 @@
 import logging
+# from asyncpg.exceptions import PostgresSyntaxError # if you wanna go safe
 
 logger = logging.getLogger(__name__)
 formatter = logging.Formatter(r'%(asctime)s:%(levelname)s:%(message)s')
@@ -10,12 +11,14 @@ logger.addHandler(handler)
 async def fetch(pool, command, *args):
     async with pool.acquire() as connection:
         async with connection.transaction():
+            print(*args)
             records = await connection.fetch(command, *args)
     return records
 
 
-async def execute(pool, command, **kwargs):
+async def executemany(pool, payload):
     async with pool.acquire() as connection:
         async with connection.transaction():
-            await connection.execute(command, *args)
+            for query in payload:
+                await connection.execute(query[0], *query[1])
     return
