@@ -27,9 +27,6 @@ for extension in extensions:
         print(extension + ' has been loaded (success)')
 
 
-
-
 # creating a connection pool
 elon.loop.run_until_complete(get_pool(elon))
-
 elon.run(os.environ.get('MIA_TOKEN'))
