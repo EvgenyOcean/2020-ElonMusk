@@ -30,9 +30,10 @@ async def on_ready():
 async def on_command_error(ctx, error):
     if isinstance(error, commands.errors.CommandNotFound):
         await ctx.send('Command doesn\'t exist!')
+    elif isinstance(error, commands.errors.MemberNotFound):
+        logger.warning('One of the commands returned Member Not Found')
     else:
-        logger.exception('Global Command Catch Exception')
-        await ctx.send('Something went wrong! Try again later!')
+        logging.exception(error)
 
 
 for extension in extensions:
