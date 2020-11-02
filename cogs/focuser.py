@@ -24,10 +24,17 @@ class Focuser(commands.Cog, ChannelsMixin):
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member:discord.Member, before, after):
-        '''Event fires once user enters or leave a voice channel'''
+        '''
+        Event fires once user enters or leave a voice channel
+        Also fires once you mute/unmute mic or sound
+        '''
         try:
+            # users changed sound/voice settings, 
+            # but didn't change the channel
+            if after.channel == before.channel:
+                return
             # user joined focus channel
-            if after.channel == self.focus_channel:
+            elif after.channel == self.focus_channel:
                 await self.handle_user_focused(member)
 
             # user left focus channel
