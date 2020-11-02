@@ -16,10 +16,11 @@ extensions = (
     'reporter',
 )
 
+
 # cmon, let's get real here
 intents = discord.Intents.all()
 elon = commands.Bot(command_prefix="elon.", intents=intents)
-
+elon.debug = os.environ.get('DEBUG_VALUE') == 'True'
 
 @elon.event
 async def on_ready():

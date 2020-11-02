@@ -25,7 +25,6 @@ class Reporter(commands.Cog, ChannelsMixin):
         '''
         Fetches all the users who worked today
         '''
-        await self.elon.wait_until_ready()
         today = get_msk_time()
         hall = self.hall_channel
         command = '''
@@ -40,7 +39,7 @@ class Reporter(commands.Cog, ChannelsMixin):
         
         else:
             day_workers = {}
-            message = ''
+            message = f":sunglasses: ** Another productive day is passing by ** :sunglasses: \n\n"
             for r in records:
                 owner = r.get('username')
                 duration = r.get('duration')
@@ -48,22 +47,25 @@ class Reporter(commands.Cog, ChannelsMixin):
                     day_workers[owner] += duration
                 else:
                     day_workers.setdefault(owner, duration)
-
+            
+            # sorting by number of worked seconds
+            day_workers = {k: v for k, v in sorted(day_workers.items(), key=lambda item: item[1], reverse=True)}
+            place = 0
+            # nicely printing leaders
             for user in day_workers:
+                place += 1
                 total_seconds = int(day_workers[user])
                 hours = total_seconds // 3600
                 minutes = (total_seconds // 60) % 60
-                message += f':man_technologist: {user} → ** |{hours:02d} : {minutes:02d}| ** \n'
+                if place == 1:
+                    message += f':trophy: {user} → ** |{hours:02d} : {minutes:02d}| ** \n'
+                elif place == 2:
+                    message += f':second_place: {user} → ** |{hours:02d} : {minutes:02d}| ** \n'
+                elif place == 3:
+                    message += f':third_place: {user} → ** |{hours:02d} : {minutes:02d}| ** \n'
+                else:
+                    message += f'{user} → ** |{hours:02d} : {minutes:02d}| ** \n'
 
-            message = f'''
-                ```plaintext
-                This is daily report time!
-                ```
-                {message}
-                ```plaintext
-                Good job! See ya all tomorrow!
-                ```
-            '''
             await hall.send(message)
 
     @commands.command()
@@ -115,8 +117,13 @@ class Reporter(commands.Cog, ChannelsMixin):
         # something went wrong and if we need to rerun minute_report
         dt_msk = get_msk_time()
 
-        dt_run_time = datetime.datetime(2020, 11, 1, 20, 59, 00, tzinfo=pytz.UTC)
-        dt_run_time = dt_run_time.astimezone(pytz.timezone('Europe/Moscow'))
+        if self.elon.debug:
+            # start ASAP *almost
+            td = datetime.timedelta(seconds=5)
+            dt_run_time = dt_msk + td
+        else:
+            # start at 23:59PM
+            dt_run_time = dt_msk.replace(hour=23, minute=59, second=55)
 
         # getting the amount of seconds between them
         td = dt_run_time - dt_msk
