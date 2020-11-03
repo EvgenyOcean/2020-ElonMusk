@@ -41,7 +41,7 @@ class Reporter(commands.Cog, ChannelsMixin):
         
         else:
             day_workers = {}
-            message = f":sunglasses: ** Another productive day is passing by ** :sunglasses: \n\n"
+            message = f":sunglasses: ** Another productive day is passing by [{today.strftime('%d-%m-%Y')}] ** :sunglasses: \n\n"
             for r in records:
                 owner = r.get('username')
                 duration = r.get('duration')
@@ -67,6 +67,8 @@ class Reporter(commands.Cog, ChannelsMixin):
                     message += f':third_place: {user} → ** |{hours:02d} : {minutes:02d}| ** \n'
                 else:
                     message += f'{user} → ** |{hours:02d} : {minutes:02d}| ** \n'
+
+            message += f'``` ```'
 
             await hall.send(message)
 
@@ -124,7 +126,7 @@ class Reporter(commands.Cog, ChannelsMixin):
             await hall.send(message)
 
     @commands.command()
-    async def file(self, ctx, member : discord.Member):
+    async def file(self, ctx, *, member : discord.Member):
         '''
         Return number of hours a member worked this week.
         '''
@@ -245,7 +247,7 @@ class Reporter(commands.Cog, ChannelsMixin):
         # deleting previous ones
         for member in hero_role.members:
             try: # fixed, can be deleted later on
-                member.remove_roles(hero_role)
+                await member.remove_roles(hero_role)
             except Exception as err:
                 logger.exception('Error while removing a hero role')
 

@@ -15,6 +15,7 @@ extensions = (
     'focuser',
     'reporter',
     'greeter',
+    'moderator',
 )
 
 
@@ -35,7 +36,7 @@ async def on_command_error(ctx, error):
     elif isinstance(error, commands.errors.MemberNotFound):
         logger.warning('One of the commands returned Member Not Found')
     else:
-        logger.warning('Somebody used a command wrong', exc_info=True)
+        logger.warning(error, exc_info=True)
 
 
 for extension in extensions:
