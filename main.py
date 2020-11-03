@@ -34,7 +34,7 @@ async def on_command_error(ctx, error):
     elif isinstance(error, commands.errors.MemberNotFound):
         logger.warning('One of the commands returned Member Not Found')
     else:
-        logging.exception(error)
+        logger.warning('Somebody used a command wrong', exc_info=True)
 
 
 for extension in extensions:

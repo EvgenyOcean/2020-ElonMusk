@@ -20,3 +20,8 @@ class ChannelsMixin:
     def hall_channel(self):
         '''Getting hall of fame channel'''
         return self.elon.get_channel(int(os.environ.get('HALL_ID')))
+
+    @cached_property
+    def briefing_channel(self):
+        '''Getting briefing channel'''
+        return self.elon.get_channel(int(os.environ.get('BRIEFING_ID')))

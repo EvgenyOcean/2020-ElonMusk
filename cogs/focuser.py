@@ -50,7 +50,7 @@ class Focuser(commands.Cog, ChannelsMixin):
         '''
         start_time = get_msk_time()
         self.in_focus.update({member: start_time})
-        await self.hall_channel.send(f'Guys, **{member.display_name}** has just entered the working mode! Try to catch up!')
+        await self.briefing_channel.send(f'Guys, **{member.display_name}** has just entered the working mode! Try to catch up!')
 
     async def handle_user_unfocused(self, member):
         '''
@@ -63,7 +63,7 @@ class Focuser(commands.Cog, ChannelsMixin):
         ts = td.total_seconds()
 
         if ts < 60:
-            await self.hall_channel.send(f'Nevermind, **{member.display_name}** quit already! Duh!')
+            await self.briefing_channel.send(f'Nevermind, **{member.display_name}** quit already! Duh!')
             return
         
         time_obj = {
@@ -81,7 +81,7 @@ class Focuser(commands.Cog, ChannelsMixin):
                 final_str += f' {value} {time_prop}'
 
         final_str = final_str.strip()
-        await self.hall_channel.send(f'Hey, **{member.display_name}** you was productive for __{final_str}__! Hope to see ya soon again!')
+        await self.briefing_channel.send(f'Hey, **{member.display_name}** you was productive for __{final_str}__! Hope to see ya soon again!')
 
     async def save_working_duration(self, member, started_working, ts):
         '''
