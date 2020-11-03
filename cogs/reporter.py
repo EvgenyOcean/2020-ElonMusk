@@ -107,7 +107,8 @@ class Reporter(commands.Cog, ChannelsMixin):
             
             # sorting by number of worked seconds
             day_workers = {k: v for k, v in sorted(day_workers.items(), key=lambda item: item[1][0], reverse=True)}
-            await self.manage_hero_role(day_workers.keys())
+            if not self.elon.debug:
+                await self.manage_hero_role(day_workers.keys())
             # nicely printing leaders
             for user in day_workers:
                 total_seconds = int(day_workers[user][0])
@@ -162,11 +163,11 @@ class Reporter(commands.Cog, ChannelsMixin):
     async def schedule_daily_report(self):
         '''
         To properly start the loop with daily reports 
-        Only at 23:59PM
+        Only at 11:59PM
         '''
         await self.elon.wait_until_ready()
-        # I need to start running daily_report everyday at 23:59PM
-        # But first time it should aslo run at 23:59PM
+        # I need to start running daily_report everyday at 11:59PM
+        # But first time it should aslo run at 11:59PM
         # This method only runs once! But we can reconfigure to check if 
         # something went wrong and if we need to rerun daily_report
         dt_msk = get_msk_time()
@@ -176,7 +177,7 @@ class Reporter(commands.Cog, ChannelsMixin):
             td = datetime.timedelta(seconds=3)
             dt_run_time = dt_msk + td
         else:
-            # start at 23:59PM
+            # start at 11:59PM
             dt_run_time = dt_msk.replace(hour=23, minute=59, second=50)
 
         # getting the amount of seconds between them
@@ -189,19 +190,19 @@ class Reporter(commands.Cog, ChannelsMixin):
             print('We can\'t run the task in the past!')
             return
         
-        # wait some amount of seconds until it's 23:59PM
+        # wait some amount of seconds until it's 11:59PM
         await asyncio.sleep(ts)
-        # once it's 23:59PM start loop task
+        # once it's 11:59PM start loop task
         self.daily_report.start()
 
     async def schedule_weekly_report(self):
         '''
         To properly start the loop with weekly reports 
-        Only sundays 23:59PM
+        Only sundays 11:59PM
         '''
         await self.elon.wait_until_ready()
-        # I need to start running weekly_reports on sundays at 23:59PM
-        # But first time it should aslo run on sunday at 23:59PM
+        # I need to start running weekly_reports on sundays at 11:59PM
+        # But first time it should aslo run on sunday at 11:59PM
         # This method only runs once! But we can reconfigure to check if 
         # something went wrong and if we need to rerun weekly_report
         dt_msk = get_msk_time()
@@ -211,9 +212,9 @@ class Reporter(commands.Cog, ChannelsMixin):
             td = datetime.timedelta(seconds=5)
             dt_run_time = dt_msk + td
         else:
-            # start at 23:59PM
+            # start at 11:59PM
             dt_run_time = dt_msk.replace(hour=23, minute=59, second=55)
-            # how many days until saturday
+            # how many days until sunday
             days_to_wait = 7 - dt_run_time.isoweekday()
             if days_to_wait:
                 td = datetime.timedelta(days=days_to_wait)
@@ -229,9 +230,9 @@ class Reporter(commands.Cog, ChannelsMixin):
             print('We can\'t run the task in the past!')
             return
         
-        # wait some amount of seconds until it's 23:59PM
+        # wait some amount of seconds until it's 11:59PM
         await asyncio.sleep(ts)
-        # once it's 23:59PM start loop task
+        # once it's 11:59PM start loop task
         self.weekly_report.start()
 
     async def manage_hero_role(self, owners):
@@ -239,11 +240,14 @@ class Reporter(commands.Cog, ChannelsMixin):
         Deletes previous heros and adds new ones
         '''
         guild = self.elon.get_guild(int(os.environ.get('GUILD_ID')))
-        hero_role = guild.get_role(int(os.environ.get('HERO_ID')))
+        hero_role = guild.get_role(int(os.environ.get('HERO_ROLE_ID')))
 
         # deleting previous ones
         for member in hero_role.members:
-            member.remove_role(hero_role)
+            try: # fixed, can be deleted later on
+                member.remove_roles(hero_role)
+            except Exception as err:
+                logger.exception('Error while removing a hero role')
 
         # adding new ones
         for owner in owners:

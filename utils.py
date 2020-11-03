@@ -14,14 +14,19 @@ class ChannelsMixin:
     @cached_property
     def focus_channel(self):
         '''Getting focus channel'''
-        return self.elon.get_channel(int(os.environ.get('FOCUS_ID')))
+        return self.elon.get_channel(int(os.environ.get('FOCUS_CHANNEL_ID')))
 
     @cached_property
     def hall_channel(self):
         '''Getting hall of fame channel'''
-        return self.elon.get_channel(int(os.environ.get('HALL_ID')))
+        return self.elon.get_channel(int(os.environ.get('HALL_CHANNEL_ID')))
 
     @cached_property
     def briefing_channel(self):
         '''Getting briefing channel'''
-        return self.elon.get_channel(int(os.environ.get('BRIEFING_ID')))
+        return self.elon.get_channel(int(os.environ.get('BRIEFING_CHANNEL_ID')))
+
+    @cached_property
+    def hello_channel(self):
+        '''Getting hello channel'''
+        return self.elon.get_channel(int(os.environ.get('HELLO_CHANNEL_ID')))

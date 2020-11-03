@@ -14,6 +14,7 @@ logger.addHandler(handler)
 extensions = (
     'focuser',
     'reporter',
+    'greeter',
 )
 
 
