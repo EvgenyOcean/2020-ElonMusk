@@ -1,3 +1,4 @@
+import os
 import discord
 import logging
 import datetime
@@ -79,7 +80,7 @@ class Reporter(commands.Cog, ChannelsMixin):
         week_num = today.isocalendar()[1]
         hall = self.hall_channel
         command = '''
-            SELECT username, duration FROM working_session 
+            SELECT owner, username, duration FROM working_session 
             LEFT JOIN users ON working_session.owner = users.id
             WHERE DATE_PART('week', working_session.date_added) = $1;
         '''
@@ -96,21 +97,23 @@ class Reporter(commands.Cog, ChannelsMixin):
             \r\n:sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles:\r
             '''
             for r in records:
-                owner = r.get('username')
-                duration = r.get('duration')
+                owner = r.get('owner') # member.id
+                username = r.get('username') # str(member)
+                duration = r.get('duration') # seconds
                 if owner in day_workers:
-                    day_workers[owner] += duration
+                    day_workers[owner][0] += duration
                 else:
-                    day_workers.setdefault(owner, duration)
+                    day_workers.setdefault(owner, [duration, username])
             
             # sorting by number of worked seconds
-            day_workers = {k: v for k, v in sorted(day_workers.items(), key=lambda item: item[1], reverse=True)}
+            day_workers = {k: v for k, v in sorted(day_workers.items(), key=lambda item: item[1][0], reverse=True)}
+            await self.manage_hero_role(day_workers.keys())
             # nicely printing leaders
             for user in day_workers:
-                total_seconds = int(day_workers[user])
+                total_seconds = int(day_workers[user][0])
                 hours = total_seconds // 3600
                 minutes = (total_seconds // 60) % 60
-                message += f'\r\n:man_superhero: {user} → ** |{hours:02d} : {minutes:02d}| **'
+                message += f'\r\n:man_superhero: {day_workers[user][1]} → ** |{hours:02d} : {minutes:02d}| **'
 
             message += f'''            
             \r\n:sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles:\
@@ -179,7 +182,7 @@ class Reporter(commands.Cog, ChannelsMixin):
         # getting the amount of seconds between them
         td = dt_run_time - dt_msk
         ts = td.total_seconds()
-        print(f'Waiting for daily report, {ts} seconds') # Waiting for 4.317719 seconds
+        print(f'Waiting for daily report, {ts} seconds left')
 
         if ts < 0:
             # need to reschedule or whatever
@@ -219,7 +222,7 @@ class Reporter(commands.Cog, ChannelsMixin):
         # getting the amount of seconds between them
         td = dt_run_time - dt_msk
         ts = td.total_seconds()
-        print(f'Waiting for weekly report: {ts} seconds left') # Waiting for 4.317719 seconds
+        print(f'Waiting for weekly report: {ts} seconds left')
 
         if ts < 0:
             # need to reschedule or whatever
@@ -230,6 +233,24 @@ class Reporter(commands.Cog, ChannelsMixin):
         await asyncio.sleep(ts)
         # once it's 23:59PM start loop task
         self.weekly_report.start()
+
+    async def manage_hero_role(self, owners):
+        '''
+        Deletes previous heros and adds new ones
+        '''
+        guild = self.elon.get_guild(int(os.environ.get('GUILD_ID')))
+        hero_role = guild.get_role(int(os.environ.get('HERO_ID')))
+
+        # deleting previous ones
+        for member in hero_role.members:
+            member.remove_role(hero_role)
+
+        # adding new ones
+        for owner in owners:
+            user = guild.get_member(owner)
+            # user may leave the guild
+            if (user):
+                await user.add_roles(hero_role)
 
 
 def setup(elon):
