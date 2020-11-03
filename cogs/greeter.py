@@ -40,7 +40,7 @@ class Greeter(commands.Cog, ChannelsMixin):
             # it may leave 1 day off, but it's okay
             td = datetime.timedelta(days=1)
             dt_run_time = dt_msk + td
-            dt_run_time = dt_msk.replace(hour=10, minute=0, second=0)
+            dt_run_time = dt_run_time.replace(hour=10, minute=0, second=0)
 
         # getting the amount of seconds between them
         td = dt_run_time - dt_msk
