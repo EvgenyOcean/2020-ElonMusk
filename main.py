@@ -50,4 +50,8 @@ for extension in extensions:
 
 # creating a connection pool
 elon.loop.run_until_complete(get_pool(elon))
-elon.run(os.environ.get('MIA_TOKEN'))
+if elon.debug:
+    print('ELON TEST IS RUNNING!')
+    elon.run(os.environ.get('ELON_TEST_TOKEN'))
+else:
+    elon.run(os.environ.get('MIA_TOKEN'))
