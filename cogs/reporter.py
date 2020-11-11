@@ -97,25 +97,12 @@ class Reporter(commands.Cog, ChannelsMixin):
         '''
         Return number of hours a member worked this week.
         '''
-        msk_time = get_msk_time()
-        current_week = msk_time.isocalendar()[1]
-        command = '''
-            SELECT duration
-            FROM working_session
-            WHERE owner = $1 AND DATE_PART('week', date_added) = $2
-        '''
-        records = await operations.fetch(self.elon.pool, command, member.id, current_week)
-
-        total_seconds = 0
-        for record in records:
-            total_seconds += int(record.get('duration'))
-        
+        record = await operations.user_week(self.elon.pool, member)
         # meaning the member never worked this week
-        if not total_seconds:
+        if not record:
             await ctx.send(f'{member.display_name} is chillin :sunglasses:')
-
-        # counting number of hours and minutes the member worked this week
         else:
+            total_seconds = int(record.get('duration'))
             hours = total_seconds // 3600
             minutes = (total_seconds // 60) % 60
             await ctx.send(f'{member.display_name} worked for ** |{hours:02d} : {minutes:02d}|** this week.')

@@ -141,6 +141,20 @@ async def finish_sessions(pool, in_db_not_in_focus):
     return records
 
 
+async def user_week(pool, member):
+    query = '''
+    SELECT ROUND(SUM(EXTRACT(epoch FROM (date_finished - date_started)))) as duration, owner
+    FROM working_session
+    WHERE owner=$1 AND 
+    (DATE_PART('week', date_started)=DATE_PART('week', timezone('europe/moscow', now())) AND date_finished IS NOT NULL)
+    GROUP BY owner;
+    '''
+    async with pool.acquire() as connection:
+        async with connection.transaction():
+            records = await connection.fetchrow(query, member.id)
+    return records
+
+
 async def fetch(pool, command, *args):
     async with pool.acquire() as connection:
         async with connection.transaction():
