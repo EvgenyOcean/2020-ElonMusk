@@ -13,7 +13,7 @@ logger.addHandler(handler)
 
 extensions = (
     'focuser',
-    # 'reporter',
+    'reporter',
     # 'greeter',
     # 'moderator',
 )

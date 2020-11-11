@@ -5,7 +5,7 @@ import logging
 from functools import cached_property
 from discord.ext import commands
 from db import operations
-from utils import get_msk_time, ChannelsMixin
+from utils import get_msk_time, ChannelsMixin, get_final_string
 
 
 ### setting up a logger ###
@@ -62,24 +62,13 @@ class Focuser(commands.Cog, ChannelsMixin):
         try:
             ts = int(result[0].get('duration'))
             if ts < 60:
+                # send the seconds
                 await self.briefing_channel.send(f'Dude, **{member.display_name}** worked for {ts} seconds! That is sick!')
+                # TODO: implement banning user if he abuses quiting/entering the focus channel
+                # delete the entries which are less than a minute
+                await operations.less_than_minute(self.elon.pool, member)
             else:   
-                td = datetime.timedelta(seconds=ts)
-
-                time_obj = {
-                    'days': td.days,
-                    'hours': td.seconds//3600,
-                    'minute(s)': (td.seconds//60)%60
-                }
-
-                final_str = ''
-                for time_prop in time_obj:
-                    value = time_obj[time_prop]
-                    if value != 0:
-                        final_str += f' {value} {time_prop}'
-
-                final_str = final_str.strip()
-
+                final_str = get_final_string(ts)
                 await self.briefing_channel.send(f'Hey, **{member.display_name}** you was productive for __{final_str}__! Hope to see ya soon again!')
 
         except Exception as err:
