@@ -68,7 +68,10 @@ class Reporter(commands.Cog, ChannelsMixin):
             await hall.send(f'Nobody worked this week. Are u ahuel tam? :sunglasses:')
 
         if not self.elon.debug:
-            await self.manage_hero_role(records[:3])
+            try:
+                await self.manage_hero_role(records[:3])
+            except Exception as err:
+                logger.exception(err)
             
         # nicely printing leaders
         place = 0
@@ -195,7 +198,7 @@ class Reporter(commands.Cog, ChannelsMixin):
         '''
         Deletes previous heros and adds new ones
         '''
-        guild = self.elon.main_guild
+        guild = self.main_guild
         hero_role = guild.get_role(int(os.environ.get('HERO_ROLE_ID')))
 
         # deleting previous ones
@@ -230,7 +233,6 @@ class Reporter(commands.Cog, ChannelsMixin):
             for record in records:
                 username = record.get('username')
                 duration = int(record.get('duration'))
-                # TODO: create function for this, cuz it's also the same pattern in focuser
                 if duration < 60:
                     await self.briefing_channel.send(f'Dude, **{username}** worked for {duration} seconds! That is sick!')
                 else:

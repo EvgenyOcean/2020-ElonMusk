@@ -20,8 +20,8 @@ async def execute_focus(pool, member=None, members=None):
         async with connection.transaction():
             if members:
                 for member in members:
-                    # for loop is fine, cuz not that many members can jump into focus channel
-                    # during 5 seconds cycling...
+                    # for loop is fine, cuz not that many members can jump into
+                    # the focus channel during 5 seconds cycling
                     await connection.execute(query, member.id, str(member))
             else:
                 await connection.execute(query, member.id, str(member))
@@ -82,9 +82,13 @@ async def fetch_week_workers(pool, week_num):
                 date_finished IS NOT NULL
         returning *
         )
-        UPDATE timings SET total=total + ROUND(EXTRACT(epoch FROM(date_finished - date_started)))
-        FROM week_sessions
-        WHERE week_sessions.owner=timings.discord_id;
+        UPDATE timings SET total=total + ws.duration
+        FROM (
+            SELECT owner, SUM(ROUND(EXTRACT(epoch FROM(date_finished - date_started)))) AS duration
+            FROM week_sessions
+            GROUP BY owner
+        ) as ws
+        WHERE ws.owner=timings.discord_id;
     '''
     async with pool.acquire() as connection:
         async with connection.transaction():
